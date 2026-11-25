@@ -1,0 +1,39 @@
+{
+  "version": "security-fixtures-v1",
+  "as_of": "2026-11-24T12:00:00Z",
+  "description": "Entirely fictional security observations; DEMO identifiers are not real CVEs.",
+  "vulnerabilities": [
+    {"id": "DEMO-2026-0001", "name": "Synthetic endpoint exposure", "expected_users": 4},
+    {"id": "DEMO-2026-0002", "name": "Synthetic application exposure", "expected_users": 2},
+    {"id": "DEMO-2026-0003", "name": "Synthetic finding with no affected users", "expected_users": 0}
+  ],
+  "device_users": [
+    {"DeviceId": "device-01", "UserId": "user-01"},
+    {"DeviceId": "device-01", "UserId": "user-01"},
+    {"DeviceId": "device-02", "UserId": "user-01"},
+    {"DeviceId": "device-03", "UserId": "user-02"},
+    {"DeviceId": "device-04", "UserId": "user-03"},
+    {"DeviceId": "device-05", "UserId": "user-04"},
+    {"DeviceId": "device-06", "UserId": "user-05"},
+    {"DeviceId": "device-07", "UserId": ""},
+    {"DeviceId": "device-08", "UserId": "user-06"},
+    {"DeviceId": "device-09", "UserId": "user-07"},
+    {"DeviceId": "device-10", "UserId": "user-08"}
+  ],
+  "findings": [
+    {"ObservationId": "obs-01", "DeviceId": "device-01", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-20T08:00:00Z", "SensorId": "sensor-east"},
+    {"ObservationId": "obs-02", "DeviceId": "device-01", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-21T08:00:00Z", "SensorId": "sensor-east"},
+    {"ObservationId": "obs-03", "DeviceId": "device-01", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-23T08:00:00Z", "SensorId": "sensor-east"},
+    {"ObservationId": "obs-04", "DeviceId": "device-02", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-22T08:00:00Z", "SensorId": "sensor-east"},
+    {"ObservationId": "obs-05", "DeviceId": "device-03", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-21T09:00:00Z", "SensorId": "sensor-west"},
+    {"ObservationId": "obs-06", "DeviceId": "device-04", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-20T09:00:00Z", "SensorId": "sensor-west"},
+    {"ObservationId": "obs-07", "DeviceId": "device-04", "VulnerabilityId": "DEMO-2026-0001", "Status": "Resolved", "ObservedAt": "2026-11-23T09:00:00Z", "SensorId": "sensor-west"},
+    {"ObservationId": "obs-08", "DeviceId": "device-05", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-22T09:00:00Z", "SensorId": "sensor-west"},
+    {"ObservationId": "obs-09", "DeviceId": "device-06", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-25T09:00:00Z", "SensorId": "sensor-east"},
+    {"ObservationId": "obs-10", "DeviceId": "device-07", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-23T10:00:00Z", "SensorId": "sensor-east"},
+    {"ObservationId": "obs-11", "DeviceId": "device-08", "VulnerabilityId": "DEMO-2026-0001", "Status": "Resolved", "ObservedAt": "2026-11-20T10:00:00Z", "SensorId": "sensor-west"},
+    {"ObservationId": "obs-12", "DeviceId": "device-08", "VulnerabilityId": "DEMO-2026-0001", "Status": "Open", "ObservedAt": "2026-11-23T10:00:00Z", "SensorId": "sensor-west"},
+    {"ObservationId": "obs-13", "DeviceId": "device-03", "VulnerabilityId": "DEMO-2026-0002", "Status": "Open", "ObservedAt": "2026-11-23T11:00:00Z", "SensorId": "sensor-west"},
+    {"ObservationId": "obs-14", "DeviceId": "device-09", "VulnerabilityId": "DEMO-2026-0002", "Status": "Open", "ObservedAt": "2026-11-24T12:00:00Z", "SensorId": "sensor-east"}
+  ]
+}

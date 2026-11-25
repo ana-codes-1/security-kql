@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Security KQL | Foundry observability</title>
+  <script>
+    (() => {
+      const param = new URLSearchParams(window.location.search).get("scoutTheme");
+      const theme =
+        param || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+  <style>
+    :root {
+      color-scheme: light;
+      --cp-bg: #f7f4ef;
+      --cp-bg-elevated: #fcfbf8;
+      --cp-surface: #ffffff;
+      --cp-surface-soft: #f5f5f5;
+      --cp-border: #dedede;
+      --cp-border-strong: #919191;
+      --cp-text: #242424;
+      --cp-text-muted: #5c5c5c;
+      --cp-text-soft: #6f6f6f;
+      --cp-accent: #b11f4b;
+      --cp-accent-hover: #9a1a41;
+      --cp-accent-soft: rgba(177, 31, 75, 0.08);
+      --cp-accent-fg: #ffffff;
+      --cp-success: #16a34a;
+      --cp-danger: #dc2626;
+      --cp-warning: #f59e0b;
+      --cp-link: #0078d4;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+      --cp-overlay: rgba(255, 255, 255, 0.8);
+      --cp-panel: rgba(255, 255, 255, 0.86);
+      --cp-panel-strong: rgba(255, 255, 255, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.55);
+      --cp-highlight: rgba(177, 31, 75, 0.12);
+    }
+    html[data-theme="dark"] {
+      color-scheme: dark;
+      --cp-bg: #3d3b3a;
+      --cp-bg-elevated: #343231;
+      --cp-surface: #292929;
+      --cp-surface-soft: #2e2e2e;
+      --cp-border: #474747;
+      --cp-border-strong: #5f5f5f;
+      --cp-text: #dedede;
+      --cp-text-muted: #919191;
+      --cp-text-soft: #b0b0b0;
+      --cp-accent: #fd8ea1;
+      --cp-accent-hover: #fb7b91;
+      --cp-accent-soft: rgba(253, 142, 161, 0.14);
+      --cp-accent-fg: #1a1a1a;
+      --cp-success: #4ade80;
+      --cp-danger: #f87171;
+      --cp-warning: #fbbf24;
+      --cp-link: #4da6ff;
+      --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+      --cp-overlay: rgba(41, 41, 41, 0.88);
+      --cp-panel: rgba(41, 41, 41, 0.72);
+      --cp-panel-strong: rgba(41, 41, 41, 0.96);
+      --cp-sheen: rgba(255, 255, 255, 0.04);
+      --cp-highlight: rgba(253, 142, 161, 0.12);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--cp-bg); color: var(--cp-text);
+      font: 15px/1.6 "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif; }
+    main { max-width: 1240px; margin: auto; padding: 40px 32px 48px; }
+    header { display: flex; justify-content: space-between; gap: 24px; align-items: flex-start; margin-bottom: 32px; }
+    h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 600; letter-spacing: -1px; margin: 4px 0 8px; line-height: 1.2; }
+    h2 { font-size: 19px; font-weight: 600; margin: 0; }
+    p { margin: 8px 0 16px; }
+    .eyebrow { color: var(--cp-accent); text-transform: uppercase; letter-spacing: 1.6px; font-size: 11px; font-weight: 700; }
+    .muted, small { color: var(--cp-text-muted); }
+    .toolbar, .row, .badges { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .toolbar { justify-content: flex-end; padding-top: 8px; }
+    a { color: var(--cp-link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(320px, 1fr); gap: 24px; align-items: start; }
+    .card { background: var(--cp-surface); border: 1px solid var(--cp-border); border-radius: 16px; padding: 24px;
+      box-shadow: 0 1px 2px var(--cp-border); min-width: 0; }
+    .card + .card { margin-top: 24px; }
+    .number { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+      border-radius: 0.625rem; background: var(--cp-accent-soft); color: var(--cp-accent); font-size: 13px; font-weight: 700; }
+    .section-title { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .badge { display: inline-block; border: 1px solid var(--cp-border); border-radius: 0.625rem;
+      padding: 4px 8px; font-size: 11px; font-weight: 600; color: var(--cp-text-muted); }
+    .badge.success { color: var(--cp-success); }
+    .badge.danger { color: var(--cp-danger); }
+    .badge.accent { color: var(--cp-accent); background: var(--cp-accent-soft); border-color: var(--cp-highlight); }
+    textarea { display: block; width: 100%; resize: vertical; min-height: 106px; border: 1px solid var(--cp-border-strong);
+      border-radius: 0.625rem; background: var(--cp-bg-elevated); color: var(--cp-text); padding: 16px;
+      font: inherit; margin: 16px 0 12px; }
+    textarea:focus { outline: 2px solid var(--cp-accent); outline-offset: 2px; }
+    button { border: 1px solid var(--cp-border); border-radius: 0.625rem; padding: 10px 16px;
+      color: var(--cp-text); background: var(--cp-surface); font: inherit; font-size: 13px;
+      font-weight: 600; cursor: pointer; }
+    button.primary { background: var(--cp-accent); border-color: var(--cp-accent); color: var(--cp-accent-fg); }
+    button.primary:hover:not(:disabled) { background: var(--cp-accent-hover); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .sample { padding: 6px 10px; font-size: 11px; background: var(--cp-surface-soft); }
+    .answer { border-left: 3px solid var(--cp-accent); padding: 12px 16px; margin-top: 24px; background: var(--cp-accent-soft);
+      border-radius: 0 0.625rem 0.625rem 0; }
+    .answer p { margin: 0; font-size: 20px; font-weight: 600; }
+    .answer small { display: block; margin-top: 8px; }
+    pre, code, .mono { font-family: Consolas, "Courier New", Courier, monospace; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.65;
+      background: var(--cp-surface-soft); border: 1px solid var(--cp-border); padding: 16px; border-radius: 0.625rem; }
+    details { margin-top: 16px; }
+    summary { cursor: pointer; color: var(--cp-text); font-weight: 600; font-size: 13px; }
+    .helper { font-size: 12px; color: var(--cp-text-muted); }
+    .divider { border-top: 1px solid var(--cp-border); margin: 20px 0; }
+    .empty { border: 1px dashed var(--cp-border); border-radius: 0.625rem; padding: 24px 16px;
+      color: var(--cp-text-muted); text-align: center; font-size: 13px; }
+    .trace-id { font-size: 10px; overflow-wrap: anywhere; color: var(--cp-text-muted); margin: 12px 0; }
+    .span { border-bottom: 1px solid var(--cp-border); padding: 12px 0; font-size: 12px; }
+    .span:last-child { border-bottom: none; }
+    .span .row { justify-content: space-between; gap: 8px; }
+    .span-name { font-family: Consolas, "Courier New", Courier, monospace; overflow-wrap: anywhere; }
+    .track { height: 4px; background: var(--cp-surface-soft); margin-top: 8px; border-radius: 0.625rem; overflow: hidden; }
+    .bar { height: 100%; min-width: 2px; background: var(--cp-accent); border-radius: 0.625rem; }
+    .span details { margin-top: 8px; }
+    .span pre { font-size: 10px; max-height: 260px; overflow: auto; }
+    .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+    .result { border: 1px solid var(--cp-border); border-radius: 0.625rem; padding: 16px; }
+    .result .count { font-size: 36px; line-height: 1.2; font-weight: 600; margin: 12px 0 4px; }
+    .result p { font-size: 12px; margin-bottom: 0; }
+    .error { border: 1px solid var(--cp-danger); color: var(--cp-danger); padding: 12px 16px; border-radius: 0.625rem; margin: 16px 0; }
+    .cloud { padding: 12px 16px; background: var(--cp-surface-soft); border-radius: 0.625rem; margin-top: 16px; font-size: 12px; }
+    footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-top: 24px; font-size: 11px; color: var(--cp-text-muted); }
+    [hidden] { display: none !important; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } header { flex-direction: column; } main { padding: 24px 16px; } }
+    @media (max-width: 480px) { .comparison { grid-template-columns: 1fr; } .card { padding: 20px; } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <div class="eyebrow">Foundry observability / security analytics</div>
+      <h1>One question. A traceable answer.</h1>
+      <p class="muted">English to guarded KQL, backed by Azure Data Explorer.</p>
+      <p class="helper" id="public-notice" hidden>Public synthetic-data demo. Shared limit: 30
+        requests per hour, two at a time. Reference approval is locked.</p>
+      <div class="badges">
+        <span class="badge accent">Synthetic data only</span>
+        <span class="badge">Read-only execution</span>
+        <span class="badge" id="model-badge">Loading configuration</span>
+      </div>
+    </div>
+    <div class="toolbar">
+      <a id="foundry-link" target="_blank" rel="noopener noreferrer" hidden>Open agent traces &nearr;</a>
+      <button id="theme-button" type="button">Switch theme</button>
+    </div>
+  </header>
+  <div id="error" class="error" role="alert" hidden></div>
+  <div class="layout">
+    <div>
+      <section class="card">
+        <div class="section-title"><span class="number">01</span><h2>Ask a security question</h2></div>
+        <p class="muted">How many distinct users are associated with an affected device?</p>
+        <form id="chat-form">
+          <label for="question" class="helper">Your question</label>
+          <textarea id="question" maxlength="1500" required>How many users are affected by DEMO-2026-0001?</textarea>
+          <div class="row">
+            <button type="submit" class="primary" id="ask-button">Generate &amp; run KQL</button>
+            <span class="helper" id="chat-status" aria-live="polite">Runs against real Azure services.</span>
+          </div>
+        </form>
+        <div class="row" id="samples" style="margin-top:16px"></div>
+        <div id="answer" class="answer" aria-live="polite" hidden>
+          <p id="answer-text"></p>
+          <small id="answer-context"></small>
+        </div>
+        <div id="query-section" hidden>
+          <details open>
+            <summary>Executed KQL</summary>
+            <pre id="candidate-kql"></pre>
+          </details>
+          <details>
+            <summary>Bound parameters and interpretation</summary>
+            <pre id="query-parameters"></pre>
+            <p class="helper" id="interpretation"></p>
+          </details>
+          <p class="helper">Foundry interprets intent; the backend compiles an approved query template.
+            Model-generated executable text never reaches the database.</p>
+        </div>
+      </section>
+      <section class="card">
+        <div class="section-title"><span class="number">02</span><h2>Check the answer</h2></div>
+        <p class="muted">Successful execution is not proof of a correct answer.</p>
+        <details id="reference-details">
+          <summary>Review the demo reference</summary>
+          <p class="helper" id="reference-definition"></p>
+          <pre id="reference-kql"></pre>
+          <p class="helper">Approval applies only to this synthetic demo, not to Forescout's business definitions.
+            Changing the reference or fixtures invalidates approval.</p>
+          <button type="button" id="approve-button">I reviewed and approve this demo reference</button>
+        </details>
+        <div class="divider"></div>
+        <div class="row">
+          <button type="button" class="primary" id="compare-button" disabled>Compare in Foundry</button>
+          <span class="helper" id="approval-status">Review the reference and ask a question first.</span>
+        </div>
+        <div id="comparison-results" hidden>
+          <p class="helper" id="expected-result"></p>
+          <div class="comparison" id="comparison-cards"></div>
+          <div class="cloud" id="cloud-status" aria-live="polite"></div>
+          <p class="helper">The saved baseline is deliberately wrong: it counts open finding rows,
+            including repeated scans and historical findings, instead of distinct affected users.</p>
+        </div>
+      </section>
+    </div>
+    <aside class="card">
+      <div class="section-title"><h2>Request trace</h2><span class="badge">OpenTelemetry</span></div>
+      <p class="helper">A local mirror of the spans sent to Application Insights, linked to the Foundry agent.</p>
+      <div id="trace-empty" class="empty">Run a question to inspect its real execution steps.</div>
+      <div id="trace-content" hidden>
+        <div id="trace-id" class="trace-id mono"></div>
+        <div class="badges" id="trace-metrics"></div>
+        <div id="spans"></div>
+      </div>
+      <div class="divider"></div>
+      <p class="helper">Use <strong>Open agent traces</strong> above for this demo's Foundry trace view.
+        Telemetry ingestion can take a few minutes; the preview here is immediate.</p>
+      <a id="insights-link" target="_blank" rel="noopener noreferrer" hidden>Open Application Insights &nearr;</a>
+      <details>
+        <summary>Dataset boundaries</summary>
+        <p class="helper" id="dataset-info"></p>
+        <p class="helper">Unknown user identities are excluded, not inferred.
+          Device-to-user associations are a fixed demo snapshot.
+          These fictional identifiers are not real CVEs.</p>
+      </details>
+    </aside>
+  </div>
+  <footer>
+    <span>Independent prototype using fictional data. Not a Forescout product or production accuracy claim.</span>
+    <span>Exact-result custom evaluator uses Foundry preview functionality.</span>
+  </footer>
+</main>
+<script>
+  const $ = id => document.getElementById(id);
+  let config;
+  let lastAnswer;
+  let busy = false;
+  let activeComparison;
+
+  function element(tag, text, className) {
+    const node = document.createElement(tag);
+    if (text !== undefined) node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  }
+  function showError(message) {
+    $("error").textContent = message;
+    $("error").hidden = false;
+  }
+  async function api(path, body) {
+    const options = {signal: AbortSignal.timeout(120000)};
+    if (body !== undefined) {
+      options.method = "POST";
+      options.headers = {"Content-Type": "application/json", "X-Demo-Request": "1"};
+      options.body = JSON.stringify(body);
+    }
+    const response = await fetch(path, options);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(typeof payload.detail === "string" ? payload.detail : "Request validation failed.");
+    return payload;
+  }
+  function updateButtons() {
+    $("ask-button").disabled = busy || !config;
+    $("compare-button").disabled = busy || !lastAnswer || !config?.reference.approved;
+    $("approve-button").disabled = busy || !!config?.reference.approved || !!config?.public_demo;
+    $("approval-status").textContent = config?.reference.approved
+      ? (lastAnswer ? "Reference approved for this fixture version." : "Reference approved. Ask a question to continue.")
+      : (config?.public_demo ? "The demo owner must approve this reference before comparison."
+        : "Review and approve the demo reference first.");
+    if (config?.reference.approved) $("approve-button").textContent = "Demo reference approved";
+  }
+  async function showTrace(traceId) {
+    const trace = await api(`/api/traces/${traceId}`);
+    $("trace-empty").hidden = true;
+    $("trace-content").hidden = false;
+    $("trace-id").textContent = `Trace ${traceId}`;
+    $("spans").replaceChildren();
+    $("trace-metrics").replaceChildren();
+    const root = trace.spans.find(span => !span.parent_id) || trace.spans[0];
+    $("trace-metrics").append(element("span", `${(root.duration_ms / 1000).toFixed(2)}s total`, "badge"));
+    const model = trace.spans.find(span => span.attributes["gen_ai.usage.input_tokens"] !== undefined);
+    if (model) {
+      const tokens = model.attributes["gen_ai.usage.input_tokens"] + model.attributes["gen_ai.usage.output_tokens"];
+      $("trace-metrics").append(element("span", `${tokens} tokens`, "badge"));
+    }
+    for (const span of trace.spans) {
+      const container = element("div", undefined, "span");
+      const row = element("div", undefined, "row");
+      row.append(element("span", span.name, "span-name"), element("span", `${span.duration_ms.toFixed(1)} ms`, "muted"));
+      const track = element("div", undefined, "track");
+      const bar = element("div", undefined, "bar");
+      bar.style.width = `${Math.max(1, Math.min(100, span.duration_ms / Math.max(root.duration_ms, 1) * 100))}%`;
+      track.append(bar);
+      const detail = element("details");
+      detail.append(element("summary", "Attributes"), element("pre", JSON.stringify(span.attributes, null, 2)));
+      container.append(row, track, detail);
+      $("spans").append(container);
+    }
+  }
+  $("chat-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    if (busy) return;
+    busy = true;
+    lastAnswer = null;
+    $("error").hidden = true;
+    $("answer").hidden = true;
+    $("query-section").hidden = true;
+    $("comparison-results").hidden = true;
+    activeComparison = null;
+    $("chat-status").textContent = "Interpreting, validating, and querying Azure...";
+    updateButtons();
+    try {
+      const answer = await api("/api/chat", {question: $("question").value.trim()});
+      $("answer").hidden = false;
+      $("answer-text").textContent = answer.message;
+      $("answer-context").textContent = answer.status === "answered"
+        ? `Synthetic snapshot: ${config.fixtures.as_of}. Latest finding state; distinct users.`
+        : "No database query was executed.";
+      if (answer.status === "answered") {
+        lastAnswer = answer;
+        $("query-section").hidden = false;
+        $("candidate-kql").textContent = answer.kql;
+        $("query-parameters").textContent = JSON.stringify(answer.parameters, null, 2);
+        $("interpretation").textContent = answer.definition;
+      }
+      await showTrace(answer.trace_id);
+      $("chat-status").textContent = answer.status === "answered" ? "Query completed." : "Clarification or unsupported request.";
+    } catch (error) {
+      showError(error.message);
+      $("chat-status").textContent = "Request failed; no fabricated answer.";
+    } finally { busy = false; updateButtons(); }
+  });
+  $("approve-button").addEventListener("click", async () => {
+    busy = true;
+    updateButtons();
+    try {
+      config.reference = await api("/api/reference/approve", {});
+      $("reference-details").open = false;
+    } catch (error) { showError(error.message); }
+    finally { busy = false; updateButtons(); }
+  });
+  function showComparison(result) {
+    $("comparison-results").hidden = false;
+    $("expected-result").textContent = `Reference result: ${result.expected} affected users for ${result.vulnerability_id}.`;
+    $("comparison-cards").replaceChildren();
+    for (const variant of result.variants) {
+      const card = element("div", undefined, "result");
+      card.append(element("span", variant.passed ? "PASS" : "FAIL", `badge ${variant.passed ? "success" : "danger"}`));
+      card.append(element("div", String(variant.actual), "count"));
+      card.append(element("strong", "affected users"));
+      card.append(element("p", variant.label));
+      const details = element("details");
+      details.append(element("summary", "Inspect query"), element("pre", variant.kql));
+      card.append(details);
+      $("comparison-cards").append(card);
+    }
+    $("cloud-status").replaceChildren();
+    const cloud = result.cloud;
+    $("cloud-status").append(element("strong", cloud ? `Foundry evaluation: ${cloud.status}` : "Local comparison only"));
+    if (cloud?.result_counts) {
+      $("cloud-status").append(element("p", `${cloud.result_counts.passed} passed / ${cloud.result_counts.failed} failed. The known-bad baseline is expected to fail.`));
+    }
+    if (cloud?.report_url) {
+      try {
+        const url = new URL(cloud.report_url);
+        if (url.protocol === "https:") {
+          const link = element("a", "Open evaluation report in Foundry");
+          link.href = url.href;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          $("cloud-status").append(document.createElement("br"), link);
+        }
+      } catch { /* The run ID remains visible if no report URL is available. */ }
+    }
+    if (cloud) $("cloud-status").append(element("div", `Run ${cloud.run_id}`, "trace-id mono"));
+  }
+  $("compare-button").addEventListener("click", async () => {
+    if (!lastAnswer || busy) return;
+    busy = true;
+    updateButtons();
+    $("error").hidden = true;
+    $("comparison-results").hidden = false;
+    $("cloud-status").textContent = "Executing both candidates and the reference, then submitting to Foundry...";
+    try {
+      let result = await api("/api/evaluations", {vulnerability_id: lastAnswer.vulnerability_id, publish: true});
+      activeComparison = result.id;
+      showComparison(result);
+      await showTrace(result.trace_id);
+      for (let attempt = 0; attempt < 120; attempt++) {
+        if (!result.cloud || ["completed", "failed", "canceled"].includes(result.cloud.status)) break;
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        if (activeComparison !== result.id) return;
+        result = await api(`/api/evaluations/${result.id}`);
+        showComparison(result);
+      }
+    } catch (error) { showError(error.message); }
+    finally { busy = false; updateButtons(); }
+  });
+  $("theme-button").addEventListener("click", () => {
+    const dark = document.documentElement.dataset.theme === "dark";
+    document.documentElement.dataset.theme = dark ? "light" : "dark";
+  });
+  (async () => {
+    try {
+      config = await api("/api/config");
+      $("model-badge").textContent = config.model;
+      $("public-notice").hidden = !config.public_demo;
+      $("reference-definition").textContent = config.reference.definition;
+      $("reference-kql").textContent = config.reference.query;
+      $("dataset-info").textContent = `${config.fixtures.device_users.length} device-user association rows and ${config.fixtures.findings.length} finding observations. Fixed cutoff: ${config.fixtures.as_of}.`;
+      for (const vulnerability of config.fixtures.vulnerabilities) {
+        const button = element("button", vulnerability.id, "sample");
+        button.type = "button";
+        button.addEventListener("click", () => {
+          $("question").value = `How many users are affected by ${vulnerability.id}?`;
+        });
+        $("samples").append(button);
+      }
+      if (config.foundry_traces_url) {
+        $("foundry-link").href = config.foundry_traces_url;
+        $("foundry-link").hidden = false;
+      }
+      if (config.insights_url) {
+        $("insights-link").href = config.insights_url;
+        $("insights-link").hidden = false;
+      }
+    } catch (error) { showError(`Configuration unavailable: ${error.message}`); }
+    updateButtons();
+  })();
+</script>
+</body>
+</html>

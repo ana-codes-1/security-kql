@@ -1,0 +1,10 @@
+declare query_parameters(vulnerability_id:string, as_of:datetime);
+VulnerabilityFindings
+| where VulnerabilityId == vulnerability_id and ObservedAt <= as_of
+| where Status == "Open"
+| join kind=inner (
+    DeviceUsers
+    | where isnotempty(UserId)
+    | distinct DeviceId, UserId
+) on DeviceId
+| summarize AffectedUsers = count()

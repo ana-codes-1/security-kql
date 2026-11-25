@@ -1,0 +1,11 @@
+.venv/
+.env
+.azure/
+.state/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+infra/main.json

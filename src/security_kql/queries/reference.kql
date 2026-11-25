@@ -1,0 +1,12 @@
+declare query_parameters(vulnerability_id:string, as_of:datetime);
+let affected_devices =
+    VulnerabilityFindings
+    | where VulnerabilityId == vulnerability_id and ObservedAt <= as_of
+    | summarize arg_max(ObservedAt, Status) by DeviceId
+    | where Status == "Open"
+    | project DeviceId;
+DeviceUsers
+| where DeviceId in (affected_devices)
+| where isnotempty(UserId)
+| summarize by UserId
+| summarize AffectedUsers = count()
